@@ -1,0 +1,138 @@
+.ui_form {
+    width: 15vw;
+    font-family: var(--text_font_family);
+    background: var(--background);
+    box-shadow: var(--box_shadow);
+    padding: 2vh;
+}
+
+.ui_form h3 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+}
+
+.form_field {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form_field label {
+    font-size: 1rem;
+    color: var(--text_colour);
+    margin-bottom: 5px;
+    text-shadow: var(--text_shadow)
+}
+
+.form_input {
+    padding: 1vh;
+    width: 100%;
+    font-size: 1.2vh;
+    border: none;
+    border-radius: var(--border_radius);
+    outline: none;
+    background: var(--secondary_background);
+    box-shadow: var(--box_shadow_inset);
+    color: var(--text_colour)
+}
+
+.date_input {
+    display: flex;
+    align-items: center;
+    gap: 0.7vh;
+    font-size: 1.2vh;
+}
+
+.date_input .date_part {
+    width: 27.5%;
+    text-align: center;
+    padding: 0.9vh;
+}
+
+.date_separator {
+    margin: 0 0.5vh;
+    color: var(--accent_colour);
+}
+
+.form_actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1vh;
+}
+
+.form_actions button {
+    width: 100%;
+    border: none;
+    border-radius: var(--border_radius);
+    font-size: 1.2vh;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    color: var(--tertiary_text_colour);
+    font-family: var(--header_font_family);
+    background-color: var(--accent_colour);
+    opacity: 0.7;
+    box-shadow: var(--box_shadow_inset);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.5vh;
+}
+
+.form_actions button:hover {
+    opacity: 1.0;
+}
+
+.custom_select {
+    position: relative;
+    width: 100%;
+    border: none;
+    border-radius: var(--border_radius);
+    outline: none;
+    background: var(--secondary_background);
+    box-shadow: var(--box_shadow_inset);
+    color: var(--text_colour);
+}
+
+.custom_selected {
+    padding: 1vh;
+    font-size: 1.2vh;
+    color: var(--text_colour);
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.custom_dropdown {
+    background: var(--secondary_background);
+    box-shadow: var(--box_shadow_inset);
+    border: 2px solid rgba(0, 0, 0, 0.5);
+    border-radius: var(--border_radius);
+    max-height: 20vh;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 1vh;
+    font-family: var(--text_font_family);
+}
+
+.custom_dropdown.hidden {
+    display: none !important;
+}
+
+.custom_dropdown .custom_option {
+    padding: 1vh;
+    font-size: 1.2vh;
+    color: var(--text_colour);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.custom_dropdown .custom_option:hover {
+    background-color: var(--tertiary_background);
+}
+
+.custom_dropdown::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}

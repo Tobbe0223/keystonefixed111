@@ -1,0 +1,302 @@
+.statuses_hud {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 12vh;
+    width: 25vw;
+    padding: 1vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.human_body {
+    height: 100%;
+    display: block;
+}
+
+.human_body svg {
+    position: absolute;
+    bottom: 1vh;
+    left: 0.5vw;
+    fill: var(--background);
+    height: 12vh;
+    width: 5vh;
+}
+
+.human_body path.minor_injury {
+    fill: rgba(255, 220, 0, 1);
+}
+
+.human_body path.major_injury {
+    fill: rgba(255, 130, 0, 1);
+}
+
+.human_body path.critical_injury {
+    fill: rgba(255, 0, 0, 1);
+}
+
+.circular_bars {
+    position: absolute;
+    bottom: 4vh;
+    left: 3vw;
+    display: flex;
+    gap: 0.3vw;
+    padding: 1vh;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.circular_bar {
+    position: relative;
+    width: 2vw;
+    height: 2vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.circular_bar.disabled {
+    display: none !important;
+}
+
+.circular_bar.fade {
+    opacity: 0.4;
+    transition: opacity 0.3s ease;
+}
+
+.circular_bar.fade.visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.circle_progress {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--background);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: var(--box_shadow_inset);
+}
+
+.circle_progress::before {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background-color: var(--background);
+    z-index: 1;
+    margin-top: 0.05vh;
+}
+
+.circle_progress i {
+    position: absolute;
+    font-size: 1.3vh;
+    color: var(--text_colour);
+    z-index: 2;
+    padding: 2px;
+}
+
+.hud_buttons {
+    position: absolute;
+    bottom: 0;
+    left: 3vw;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.2vw;
+    padding: 1vh;
+    width: 70%;
+}
+
+.hud_buttons button {
+    height: 2.2vh;
+    width: 2.2vh;
+    background: var(--background);
+    color: var(--text_colour);
+    border: none;
+    border-radius: var(--border_radius);
+    box-shadow: var(--box_shadow_inset);
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hud_buttons button:hover {
+    cursor: pointer;
+    opacity: 1.0;
+    transform: translateY(-20%);
+    color: var(--accent_colour);
+}
+
+.hud_buttons button i {
+    padding: 1px;
+    font-size: 1.1vh;
+}
+
+.hud_buttons button.active {
+    transform: translateY(-20%);
+    color: var(--accent_colour);
+    opacity: 1.0;
+}
+
+.hud_content_container {
+    position: absolute;
+    bottom: 15vh;
+    left: 1vw;
+    min-width: 10vw;
+    width: fit-content;
+    padding: 1vh;
+    background: var(--background);
+    border-radius: var(--border_radius);
+    box-shadow: var(--box_shadow);
+    color: var(--text_colour);
+    display: none;
+    z-index: 10;
+}
+
+.hud_content_container h2 {
+    font-size: 2vh;
+    margin-bottom: 1vh;
+    color: var(--text_colour);
+    padding-bottom: 0.5vh;
+    font-family: var(--header_font_family);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hud_content_container h2::after {
+    content: "";
+    width: 20%;
+    height: 0.3vh;
+    background-color: var(--accent_colour);
+    border-radius: var(--border_radius);
+    box-shadow: var(--box_shadow_inset);
+    margin-top: 0.5vh;
+}
+
+.hud_content_container ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+    max-height: 9vh;
+    overflow-y: scroll;
+}
+
+.hud_content_container ul li {
+    font-size: 1.6vh;
+    padding: 0.5vh 1vh;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--secondary_text_colour);
+    text-transform: capitalize;
+    font-family: var(--text_font_family);
+}
+
+.hud_content_container ul li:last-child {
+    border-bottom: none;
+}
+
+.hud_content_container ul li span.severity {
+    font-weight: bold;
+    text-transform: capitalize;
+    padding-left: 1vw;
+    color: var(--highlight_colour);
+}
+
+.minor_injury .severity {
+    color: darkgoldenrod;
+}
+
+.major_injury .severity {
+    color: orange;
+}
+
+.critical_injury .severity {
+    color: red;
+}
+
+#temperature_container {
+    font-size: 1.2vh;
+    color: var(--stamina_colour);
+    background-color: var(--background);
+    padding: 0.4vh 1vh;
+    border-radius: var(--border_radius);
+    opacity: 0.9;
+    font-family: var(--text_font_family);
+    box-shadow: var(--box_shadow_inset);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.map_container {
+    position: fixed;
+    top: 37px;
+    right: 36px;
+    height: 231px;
+    width: 236px;
+    box-shadow: var(--box_shadow);
+    border: 2px solid var(--background);
+    color: var(--text_colour);
+    text-shadow: var(--text_shadow);
+    font-family: var(--text_font_family);
+}
+
+.distance_indicator {
+    position: absolute;
+    bottom: 0.25vh;
+    left: 0;
+    margin-left: 0.5vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2vh;
+    
+}
+
+.distance_indicator i,
+.street_name_indicator i {
+    margin-right: 0.25vh;
+    font-size: 1vh;
+    padding: 1px;
+}
+
+.direction_indicator {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin-right: 0.5vh;
+    font-size: 1.2vh;
+    padding: 1px;
+}
+
+.street_name_indicator {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-family: var(--header_font_family);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5vh;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text_colour);
+    text-shadow: var(--text_shadow);
+}
+
+.street_name_indicator p {
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
