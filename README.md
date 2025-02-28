@@ -11,6 +11,8 @@ Instead, it's designed to be modular and flexible, easily adaptable not just for
 
 The focus here isn't on packing in every possible feature; it's about creating something enjoyable and sharing it with the community.
 
+---
+
 ## 🌐 Features 
 
 - **Player Management:** Class-based player objects with a wide range of useful functions.  
@@ -80,6 +82,8 @@ The core includes a full grid-based inventory system, designed for flexibility a
 
 Tip: If you are not a fan of grid based inventories set all items to `height = 1, width = 1` and it will function like a regular slot based inventory.
 
+---
+
 ## 🚀 Why Choose Keystone?
 
 ### Pros:  
@@ -98,3 +102,64 @@ Tip: If you are not a fan of grid based inventories set all items to `height = 1
 
 If you’re looking for a fresh alternative to mainstream frameworks or want a lightweight, modular foundation for your server, Keystone is worth exploring. 
 It’s not for everyone, but it offers a different approach for those ready to experiment.
+
+---
+
+## 💹 Dependencies
+
+- **[OxMySQL](https://github.com/overextended/oxmysql/releases)**
+- **[FiveM Utils](https://github.com/keystonehub/fivem_utils/releases)**
+
+## 📦 Getting Started
+
+### txAdminRecipe
+
+The easiest way to get setup is by installing from the `recipe.yaml`
+
+To do this follow the txAdmin setup process until your can choose your template.
+From here select "Remote URL Template" and paste the following link.
+
+```
+https://raw.githubusercontent.com/keystonehub/txAdminRecipe/main/recipe.yaml
+```
+
+**Dont forget to customise the data sections and config to your liking.**
+
+### Manual Install
+
+Prior to manual installation make sure you have all of the dependencies listed above in your server.
+
+1. Add the `fivem_utils` `REQUIRED.sql` into your database.
+2. Add the `keystone` `sql.sql` into your database.
+3. Then go back to `fivem_utils` and add the `keystone.sql` into your database.
+4. Customise keystone core data and configs to suite your needs.
+5. Add keystone and dependancies into your server resources.
+6. Add `ensure keystone` into your server.cfg ensuring it is after any dependencies.
+7. Restart the server and you should be up and running.
+
+## 📝 Notes
+
+- The core is currently in an early BETA state, bugs are to be expected.
+- The core is just that, its a core, it is not a full server build, do not install expected more than what it is.
+- Documenation is only partially completled right not, please be aware of this before trying to make a full server with this.
+- UI elements are subject to change, mainly the hud, this is a hash together of two old unfinished hud projects, it could be a lot better.
+
+## 🤝 Contributions
+
+Contributions are more than welcome! 
+If you would like to contribute to the core, or any other Keystone resource, please fork the repository and submit a pull request or contact through discord.
+
+## 📝 Documentation
+
+Documentation for the core is partially complete, it will be finished as soon as possible. 
+
+**[Documentation](https://keystonehub.gitbook.io/keystone/keystone)**
+
+## 📩 Support
+
+Support for Keystone resources is primarily handled by the community.
+Please do not join the discord expecting instant support. 
+
+This is a **free** and **open source** resource after all. 
+
+**[Discord](https://discord.gg/SjNhQV2YeN)**
