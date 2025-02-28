@@ -11,8 +11,6 @@ Instead, it's designed to be modular and flexible, easily adaptable not just for
 
 The focus here isn't on packing in every possible feature; it's about creating something enjoyable and sharing it with the community.
 
----
-
 ## 🌐 Features 
 
 - **Player Management:** Class-based player objects with a wide range of useful functions.  
@@ -82,8 +80,6 @@ The core includes a full grid-based inventory system, designed for flexibility a
 
 Tip: If you are not a fan of grid based inventories set all items to `height = 1, width = 1` and it will function like a regular slot based inventory.
 
----
-
 ## 🚀 Why Choose Keystone?
 
 ### Pros:  
@@ -102,8 +98,6 @@ Tip: If you are not a fan of grid based inventories set all items to `height = 1
 
 If you’re looking for a fresh alternative to mainstream frameworks or want a lightweight, modular foundation for your server, Keystone is worth exploring. 
 It’s not for everyone, but it offers a different approach for those ready to experiment.
-
----
 
 ## 💹 Dependencies
 
