@@ -47,7 +47,6 @@ COMMANDS.register('additem', { 'mod', 'admin', 'dev', 'owner' }, 'Give someone a
     if not player then NOTIFICATIONS.send(source, { type = 'error', header = 'SYSTEM', message = 'Player not found.', duration = 3500 }) return end
     local success = player.inventory:add_item(item_id, amount)
     if not success then
-    if success then
         NOTIFICATIONS.send(source, { type = 'error', header = 'SYSTEM', message = 'Failed to add item to inventory.', duration = 3500 })
         return
     end
