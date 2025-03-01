@@ -26,7 +26,7 @@ function parse_duration(str)
 end
 
 --- Calculates the total weight of default items.
---- @param default_items table: List of default items for new characters.
+--- @param items table: List of default items for new characters.
 --- @return number: Total weight of all items.
 function calculate_total_item_weight(items)
     local total_weight = 0
@@ -41,7 +41,7 @@ end
 
 --- Check if two rectangles intersect.
 --- @param rect1 table: X and Y for rectangle 1.
---- @param rect2 table: X and Y for rectangle 1.
+--- @param rect2 table: X and Y for rectangle 2.
 function rectangles_intersect(rect1, rect2)
     return not ( rect1.x2 < rect2.x1 or rect1.x1 > rect2.x2 or rect1.y2 < rect2.y1 or rect1.y1 > rect2.y2 )
 end
