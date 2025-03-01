@@ -290,13 +290,13 @@ end
 
 --- @section NUI Callbacks
 
+--- NUI Callback for moving items.
 RegisterNUICallback('inventory_move_item', function(data)
-    if not data or type(data) ~= 'table' then return end
+    if not data then return debug_log('error', 'Inventory move data missing.') end
     TriggerServerEvent('keystone:sv:inventory_move_item', data)
 end)
 
-
--- NUI Callback for using an item from the inventory
+--- NUI Callback for using an item from the inventory
 RegisterNUICallback('inventory_use_item', function(data, cb)
     if not data or not data.key then
         NOTIFICATIONS.send({ type = 'error', header = 'Item Error', message = ('Invalid data. An item key must be provided. Data: %s'):format(json.encode(data)), duration = 3000 })
