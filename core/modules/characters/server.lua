@@ -64,6 +64,12 @@ local function get_characters(source)
     local params = { unique_id }
     local chars = MySQL.query.await(query, params)
     if not chars or #chars == 0 then  debug_log('warn', ('No characters found for user with unique_id: %s'):format(unique_id)) return {}  end
+    function format_date(timestamp)
+        local time = tonumber(timestamp)
+        if not time then return 'Invalid Date' end
+        local date = os.date('*t', time)
+        return ('%02d-%02d-%d'):format(date.day, date.month, date.year)
+    end
     local mapped_chars = {}
     for _, character in ipairs(chars) do
         mapped_chars[#mapped_chars + 1] = {
