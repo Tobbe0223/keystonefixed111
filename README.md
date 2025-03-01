@@ -105,6 +105,7 @@ It’s not for everyone, but it offers a different approach for those ready to e
 
 - **[OxMySQL](https://github.com/overextended/oxmysql/releases)**
 - **[FiveM Utils](https://github.com/keystonehub/fivem_utils/releases)**
+- A database running MySQL 5.7.22 upwards or MariaDB 10.5.0 upwards.
 
 ## 📦 Getting Started
 
