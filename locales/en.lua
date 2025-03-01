@@ -4,6 +4,8 @@ return {
 
     --- @section Shared
 
+    player_missing = 'Player %s was not found in registry.',
+
     --- @section init.lua
 
     module_already_loaded = 'Module already loaded: %s',
@@ -19,5 +21,9 @@ return {
 
     --- @section core/classes/Player.lua
 
-    failed_create_player_object = 'Failed to create Player: Missing required arguments (source, unique_id, char_id)'
+    failed_create_player_object = 'Failed to create Player: Missing required arguments (source, unique_id, char_id)',
+
+    --- @section scripts/inventory/server.lua
+
+    item_move_failed = 'Item movement failed.'
 }
