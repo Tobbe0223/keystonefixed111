@@ -56,34 +56,27 @@ local function get_characters(source)
     if not user then debug_log('error', ('User not found for source: %d'):format(source)) return end
     local unique_id = user.unique_id
     local query = [[
-        SELECT c.*, cs.style, cs.has_customised
+        SELECT c.*, cs.style, cs.has_customised, pa.title AS alignment_title
         FROM players c
         LEFT JOIN player_styles cs ON c.identifier = cs.identifier
+        LEFT JOIN player_alignments pa ON c.identifier = pa.identifier
         WHERE c.unique_id = ?
     ]]
     local params = { unique_id }
     local chars = MySQL.query.await(query, params)
-    if not chars or #chars == 0 then  debug_log('warn', ('No characters found for user with unique_id: %s'):format(unique_id)) return {}  end
-    function format_date(timestamp)
-        local time = tonumber(timestamp)
-        if not time then return 'Invalid Date' end
-        local date = os.date('*t', time)
-        return ('%02d-%02d-%d'):format(date.day, date.month, date.year)
-    end
+    if not chars or #chars == 0 then debug_log('warn', ('No characters found for user with unique_id: %s'):format(unique_id)) return {} end
     local mapped_chars = {}
     for _, character in ipairs(chars) do
         mapped_chars[#mapped_chars + 1] = {
             char_id = character.char_id,
             profile_picture = character.profile_picture,
             title = ('%s %s %s'):format(character.first_name, character.middle_name or '', character.last_name),
-            description = { ('Identifier: %s'):format(character.identifier) },
+            description = { ('%s'):format(character.alignment_title or 'Not Assigned') },
             values = {
                 { key = 'Identifier', value = character.identifier },
                 { key = 'Sex', value = character.sex },
                 { key = 'Date Of Birth', value = character.date_of_birth },
-                { key = 'Nationality', value = character.nationality },
-                { key = 'Last Login', value = format_date(character.last_login) },
-                { key = 'Created', value = format_date(character.created) }
+                { key = 'Nationality', value = character.nationality }
             },
             data = {
                 identity = character,
