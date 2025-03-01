@@ -1,17 +1,14 @@
 # Keystone - Framework Core
 
-![keystone_banner](https://github.com/user-attachments/assets/bb974332-ab44-4ff6-9534-9bace315b40c)
-
 ## 🌍 Overview
 
-Keystone is a comprehensive and adaptable server framework for FiveM. 
-Originally developed as `boii_core` for a personal server howver, as it developed, it began consuming more time than anticipated, diverting attention from other work. 
-Due to this the decision was made to transition it into a open-source project.
+Keystone is a comprehensive and adaptable server framework for FiveM. Originally developed as `boii_core` and released as an alpha, however I have recently begun to move all boii dev free resources over to a new open source location Keystone Hub to help create a clear separation between paid resources, and free open source. With this move, comes the planned BETA release of `boii_core` now `keystone`.
 
-It's important to clarify that Keystone was not developed to compete with established "roleplay frameworks." 
-Instead, it's designed to be modular and flexible, easily adaptable not just for roleplay but also for survival, racing, or any other type of server with minimal tweaks.
+It's important to clarify that Keystone was not developed to compete with established "roleplay frameworks." Instead, it's designed to be modular, flexible, and easily adaptable for any other type of server with minimal tweaks. *(My personal plan is for a survival server in the future)*
 
-The focus here isn't on packing in every possible feature; it's about creating something enjoyable and sharing it with the community.
+Again, the focus here isn't on packing in every possible feature; it's just about creating something enjoyable and sharing it with the community.
+
+---
 
 ## 🌐 Features 
 
@@ -67,20 +64,20 @@ What you can do with it:
 
 The cores multi-character, clothing, and inventory have all been created through the builder.
 
-### Inventory  
+### Internal Resources
 
-The core includes a full grid-based inventory system, designed for flexibility and ease of use.  
+The core includes a small amount of server essential resources; 
 
-- **Grid Layout:** Items are placed in a grid based style to create a inventory management system.  
-- **Hover Tooltips:** Displays item details when hovered over.  
-- **Keypress Actions:** Items can be interacted with using configurable key presses on hover.  
-- **Item Metadata:** Supports item quality, rarity, and additional custom data.  
-- **Drag & Drop Support:** Allows item movement within the inventory or between inventories.  
-- **Split & Stack Items:** Split stacks or merge them as needed.  
-- **Weight System:** Items contribute to a total inventory weight..  
-- **Multi-Inventory Support:** Handles multiple inventories, such as player, vehicle, or stash storage.  
+- **Multi-Character:** The multi-character was created using the the cores UI builder, it has support for character limits and optional middle names.
+- **Grid-Based Inventory:** Full grid based inventory system with support for other inventories, created using the cores ui builder.
+- **Character Customisation:** Forced customisation location for first logins, this again is created using the UI builder.
+- **Player HUD:** A status hud, speedometer and map container including streetnames and distance markers.
+- **Player Statuses:** Full status system with support for hygiene, injuries, and detailed flag tracking. 
+- **Death Screen:** Simple death screen works in tandem with the cores status system to allow players to give up, call for assistance, or respawn.
 
-Tip: If you are not a fan of grid based inventories set all items to `height = 1, width = 1` and it will function like a regular slot based inventory.
+The core also gains access to some additional resources through `fivem_utils` our open source library, this covers things like progressbars, skill systems, notifications etc.
+
+---
 
 ## 🚀 Why Choose Keystone?
 
@@ -101,11 +98,12 @@ Tip: If you are not a fan of grid based inventories set all items to `height = 1
 If you’re looking for a fresh alternative to mainstream frameworks or want a lightweight, modular foundation for your server, Keystone is worth exploring. 
 It’s not for everyone, but it offers a different approach for those ready to experiment.
 
+---
+
 ## 💹 Dependencies
 
 - **[OxMySQL](https://github.com/overextended/oxmysql/releases)**
 - **[FiveM Utils](https://github.com/keystonehub/fivem_utils/releases)**
-- A database running MySQL 5.7.22 upwards or MariaDB 10.5.0 upwards.
 
 ## 📦 Getting Started
 
