@@ -25,16 +25,6 @@ function parse_duration(str)
     return seconds
 end
 
---- Formats a timestamp into a readable date (DD-MM-YYYY).
----@param timestamp number|string: The timestamp to format.
----@return string: The formatted date.
-function format_date(timestamp)
-    local time = tonumber(timestamp)
-    if not time then return 'Invalid Date' end
-    local date = os.date('*t', time)
-    return ('%02d-%02d-%d'):format(date.day, date.month, date.year)
-end
-
 --- Calculates the total weight of default items.
 --- @param default_items table: List of default items for new characters.
 --- @return number: Total weight of all items.
