@@ -29,6 +29,15 @@ end
 keystone.get_players = get_players
 exports('get_players', get_players)
 
+--- Get a specific player.
+--- @return table|nil: Player or nil.
+function get_player(source)
+    return player_registry[source] or nil
+end
+
+keystone.get_player = get_player
+exports('get_player', get_player)
+
 --- @section Create Player
 
 --- Create a new player object and add it to the registry.
