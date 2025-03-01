@@ -104,95 +104,19 @@ end
 
 --- @section Events
 
+--- Handles item movement.
+--- @param data table: Inventory movement data.
 RegisterServerEvent('keystone:sv:inventory_move_item')
 AddEventHandler('keystone:sv:inventory_move_item', function(data)
-    local source = source
-    local player = player_registry[source]
-    
-    print("[Inventory Move] Event Triggered | Source:", source)
-    
-    if not player then 
-        print("[Inventory Move] Player not found in registry!")
-        return 
+    local src = source
+    local player = player_registry[src]
+    if not player then debug_log('error', L('player_missing', src)) return end
+    if data.source_inventory == 'player' and data.target_inventory == 'player' then
+        local success = player.inventory:move_item(data.source_x, data.source_y, data.target_x, data.target_y)
+        if not success then debug_log('error', L('item_move_failed')) return end
+    else
+        debug_log('info', 'Movement between different inventory types is not implemented right now')
     end
-
-    local is_source_player = data.source_inventory == 'player'
-    local is_target_player = data.target_inventory == 'player'
-    local same_inventory = data.source_inventory == data.target_inventory
-
-    print(("[Inventory Move] Source Inventory: %s | Target Inventory: %s | Same Inventory: %s"):format(
-        data.source_inventory, data.target_inventory, tostring(same_inventory)
-    ))
-
-    if not same_inventory and not (is_source_player or is_target_player) then 
-        print("[Inventory Move] Invalid inventory movement: Source and Target are not player inventories.")
-        return 
-    end
-
-    local source_inv = is_source_player and player.inventory or other_inventories[data.source_inventory]
-    local target_inv = is_target_player and player.inventory or other_inventories[data.target_inventory]
-
-    if not source_inv then 
-        print("[Inventory Move] Source inventory not found! Inventory ID:", data.source_inventory)
-        return 
-    end
-    if not target_inv then 
-        print("[Inventory Move] Target inventory not found! Inventory ID:", data.target_inventory)
-        return 
-    end
-
-    local item_key, item_to_move = source_inv:get_item(data.source_x, data.source_y)
-    if not item_key or not item_to_move then 
-        print("[Inventory Move] Item not found at given position: ", data.source_x, data.source_y)
-        return 
-    end
-
-    print(("[Inventory Move] Moving Item: %s | Amount: %d | From (%d, %d) to (%d, %d)"):format(
-        item_to_move.id, item_to_move.amount, data.source_x, data.source_y, data.target_x, data.target_y
-    ))
-
-    if same_inventory then
-        print("[Inventory Move] Moving item within the same inventory.")
-        source_inv:move_item(data.source_x, data.source_y, data.target_x, data.target_y)
-        return
-    end
-
-    print("[Inventory Move] Removing item from source inventory...")
-    local success = source_inv:remove_item(item_key, item_to_move.amount)
-    if not success then 
-        print("[Inventory Move] Failed to remove item from source inventory.")
-        return 
-    end
-
-    print("[Inventory Move] Adding item to target inventory...")
-    success = target_inv:add_item(item_to_move.id, item_to_move.amount, item_to_move.data, data.target_x, data.target_y)
-    if not success then
-        print("[Inventory Move] Failed to add item to target inventory. Returning item to source...")
-        source_inv:add_item(item_to_move.id, item_to_move.amount, item_to_move.data, data.source_x, data.source_y)
-        return
-    end
-
-    if is_source_player or is_target_player then 
-        print("[Inventory Move] Syncing player data...")
-        player:sync_data() 
-    end
-
-    if not is_source_player then
-        print("[Inventory Move] Updating source inventory in database...")
-        MySQL.update('UPDATE other_inventories SET items = ? WHERE unique_id = ?', {
-            json.encode(source_inv:get_inventory().items),
-            data.source_inventory
-        })
-    end
-    if not is_target_player then
-        print("[Inventory Move] Updating target inventory in database...")
-        MySQL.update('UPDATE other_inventories SET items = ? WHERE unique_id = ?', {
-            json.encode(target_inv:get_inventory().items),
-            data.target_inventory
-        })
-    end
-
-    print("[Inventory Move] Item move successful!")
 end)
 
 --- Handles item usage requests from the client.
