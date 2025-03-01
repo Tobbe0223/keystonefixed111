@@ -39,30 +39,9 @@ function calculate_total_item_weight(items)
     return total_weight
 end
 
---- Finds the next available grid position for an item.
---- @param inventory_grid table: The players inventory grid.
---- @param grid_columns number: The number of columns in the grid.
---- @param grid_rows number: The number of rows in the grid.
---- @param item_width number: The width of the item.
---- @param item_height number: The height of the item.
---- @return number, number: The x and y position if found, otherwise nil.
-function find_available_grid_position(inventory_grid, grid_columns, grid_rows, item_width, item_height)
-    for y = 1, grid_rows do
-        for x = 1, grid_columns do
-            local fits = true
-            for h = 0, item_height - 1 do
-                for w = 0, item_width - 1 do
-                    local check_x = x + w
-                    local check_y = y + h
-                    if check_x > grid_columns or check_y > grid_rows or inventory_grid[('%d_%d'):format(check_x, check_y)] then
-                        fits = false
-                        break
-                    end
-                end
-                if not fits then break end
-            end
-            if fits then return x, y end
-        end
-    end
-    return nil, nil
+--- Check if two rectangles intersect.
+--- @param rect1 table: X and Y for rectangle 1.
+--- @param rect2 table: X and Y for rectangle 1.
+function rectangles_intersect(rect1, rect2)
+    return not ( rect1.x2 < rect2.x1 or rect1.x1 > rect2.x2 or rect1.y2 < rect2.y1 or rect1.y1 > rect2.y2 )
 end
