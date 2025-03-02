@@ -10,6 +10,83 @@ function Inventory.new(player)
     return setmetatable({ player = player }, Inventory)
 end
 
+--- @section Internal Functions
+
+--- Moves an item in the players inventory.
+--- @param source_x number: Source X grid position.
+--- @param source_y number: Source Y grid position.
+--- @param target_x number: Target X grid position.
+--- @param target_y number: Target Y grid position.
+function Inventory:move_item(source_x, source_y, target_x, target_y)
+    local items = self.player._data.inventory.items
+    local item_to_move, target_slot
+    for key, item in pairs(items) do
+        if item.grid.x == source_x and item.grid.y == source_y then
+            item_to_move = key
+        end
+        if item.grid.x == target_x and item.grid.y == target_y then
+            target_slot = key
+        end
+        if item_to_move and target_slot then break end
+    end
+    if not item_to_move then return false end
+    if target_slot then
+        local item = items[item_to_move]
+        local target_item = items[target_slot]
+        if item.id == target_item.id and target_item.stackable then
+            local max_stack = target_item.stackable == true and math.huge or target_item.stackable
+            local total_qty = target_item.amount + item.amount
+            target_item.amount = math.min(total_qty, max_stack)
+            if total_qty > max_stack then
+                item.amount = total_qty - max_stack
+            else
+                items[item_to_move] = nil
+            end
+        else
+            items[item_to_move].grid.x, items[item_to_move].grid.y = target_x, target_y
+            items[target_slot].grid.x, items[target_slot].grid.y = source_x, source_y
+        end
+    else
+        items[item_to_move].grid.x = target_x
+        items[item_to_move].grid.y = target_y
+    end
+    self.player:sync_data()
+    return true
+end
+
+
+--- Finds the next available grid position.
+--- @param self table: The Inventory instance.
+--- @param item_width number: The width of the item.
+--- @param item_height number: The height of the item.
+--- @return number, number: The x and y coordinates if found, otherwise nil, nil.
+function Inventory:find_available_grid_position(item_width, item_height)
+    local inv = self.player._data.inventory
+    local cols, rows = inv.grid_columns, inv.grid_rows
+    for y = 0, rows - item_height do
+        for x = 0, cols - item_width do
+            local candidate = { x1 = x, y1 = y, x2 = x + item_width - 1, y2 = y + item_height - 1 }
+            local fits = true
+            for _, item in pairs(inv.items) do
+                local info = keystone.data.items[item.id]
+                local iw = (info and info.grid and info.grid.width) or 1
+                local ih = (info and info.grid and info.grid.height) or 1
+                local existing = { x1 = item.grid.x, y1 = item.grid.y, x2 = item.grid.x + iw - 1, y2 = item.grid.y + ih - 1 }
+                if rectangles_intersect(candidate, existing) then
+                    fits = false
+                    break
+                end
+            end
+            if fits then
+                return x, y
+            end
+        end
+    end
+    return nil, nil
+end
+
+--- @section Export Functions
+
 --- Gets the players inventory.
 function Inventory:get_inventory()
     return self.player._data.inventory
@@ -108,91 +185,62 @@ exports('has_item', function(source, id, amount)
     if player then return player.inventory:has_item(id, amount) end
 end)
 
---- Finds the next available grid position.
---- @param self table: The Inventory instance.
---- @param item_width number: The width of the new item.
---- @param item_height number: The height of the new item.
---- @return number, number: The x and y position if found, otherwise nil.
-function Inventory:find_available_grid_position(item_width, item_height)
-    local inv = self.player._data.inventory
-    local grid_columns = inv.grid_columns
-    local grid_rows = inv.grid_rows
-    local placed_items = inv.items
-    for y = 1, grid_rows do
-        for x = 1, grid_columns do
-            if (x + item_width - 1) <= grid_columns and (y + item_height - 1) <= grid_rows then
-                local candidate_rect = { x1 = x, y1 = y, x2 = x + item_width - 1, y2 = y + item_height - 1 }
-                local fits = true
-                for _, item in ipairs(placed_items) do
-                    local item_info = keystone.data.items[item.id]
-                    local existing_width = (item_info and item_info.grid and item_info.grid.width) or 1
-                    local existing_height = (item_info and item_info.grid and item_info.grid.height) or 1
-                    local ex = item.grid.x
-                    local ey = item.grid.y
-                    local existing_rect = { x1 = ex, y1 = ey, x2 = ex + existing_width - 1, y2 = ey + existing_height - 1 }
-                    if rectangles_intersect(candidate_rect, existing_rect) then
-                        fits = false
-                        break
-                    end
-                end
-                if fits then
-                    return x, y
-                end
-            end
-        end
-    end
-    return nil, nil
-end
-
---- Adds an item to the players inventory.
+--- Adds an item to the player's inventory.
 --- @param id string: The item ID.
---- @param amount number: The amount of the item.
---- @param data table: Additional item metadata.
---- @return boolean: Returns true if the item was successfully added, false otherwise.
-function Inventory:add_item(id, amount, data)
+--- @param amount number: The total amount to add.
+--- @param data table: Optional item metadata.
+--- @param grid_x number|nil: Optional X coordinate in the grid.
+--- @param grid_y number|nil: Optional Y coordinate in the grid.
+--- @return boolean: True if the item was successfully added, false otherwise.
+function Inventory:add_item(id, amount, data, grid_x, grid_y)
     local item_data = keystone.data.items[id]
     if not item_data then return false end
     amount, data = amount or 1, data or {}
-    local item_width = (item_data.grid and item_data.grid.width) or 1
-    local item_height = (item_data.grid and item_data.grid.height) or 1
+    local width = (item_data.grid and item_data.grid.width) or 1
+    local height = (item_data.grid and item_data.grid.height) or 1
+    local inv = self.player._data.inventory
     local total_weight = amount * item_data.weight
-    if self.player._data.inventory.weight + total_weight > self.player._data.inventory.max_weight then return false end
-    local remaining_amount = amount
-    local player_items = self.player._data.inventory.items
-    local grid_columns = self.player._data.inventory.grid_columns
-    local grid_rows = self.player._data.inventory.grid_rows
+    if inv.weight + total_weight > inv.max_weight then return false end
+    local remaining = amount
+    local items = inv.items
     if item_data.stackable then
-        for key, item in pairs(player_items) do
+        for _, item in pairs(items) do
             if item.id == id then
                 local max_stack = (item_data.stackable == true) and math.huge or item_data.stackable
-                local addable = math.min(remaining_amount, max_stack - item.amount)
-                if addable > 0 then
-                    item.amount = item.amount + addable
-                    self.player._data.inventory.weight = self.player._data.inventory.weight + (addable * item_data.weight)
-                    remaining_amount = remaining_amount - addable
-                    if remaining_amount <= 0 then 
-                        break 
+                local merge = math.min(remaining, max_stack - item.amount)
+                if merge > 0 then
+                    item.amount = item.amount + merge
+                    remaining = remaining - merge
+                    inv.weight = inv.weight + merge * item_data.weight
+                    if remaining <= 0 then
+                        self.player:sync_data()
+                        return true
                     end
                 end
             end
         end
     end
-    while remaining_amount > 0 do
-        local x, y = self:find_available_grid_position(item_width, item_height)
-        if not x or not y then return false end
-        local add_amount = item_data.stackable and math.min(remaining_amount, (item_data.stackable == true and remaining_amount or item_data.stackable)) or 1
-        local new_key = nil
-        local next_key = 0
-        for key, _ in pairs(player_items) do
-            local num_key = tonumber(key)
-            if num_key and num_key > next_key then
-                next_key = num_key
-            end
+    while remaining > 0 do
+        local x, y = grid_x, grid_y
+        if not x or not y then x, y = self:find_available_grid_position(width, height) end
+        if not x or not y then
+            self.player:sync_data()
+            return false
         end
-        new_key = tostring(next_key + 1)
-        player_items[new_key] = { id = id, amount = add_amount, grid = { x = x, y = y }, is_hotbar = false, hotbar_slot = '' }
-        self.player._data.inventory.weight = self.player._data.inventory.weight + (add_amount * item_data.weight)
-        remaining_amount = remaining_amount - add_amount
+        local add_amount = 1
+        if item_data.stackable then
+            local max_stack = (item_data.stackable == true) and math.huge or item_data.stackable
+            add_amount = math.min(remaining, max_stack)
+        end
+        local next_key = 0
+        for key, _ in pairs(items) do
+            local num = tonumber(key)
+            if num and num > next_key then next_key = num end
+        end
+        local new_key = tostring(next_key + 1)
+        items[new_key] = { id = id, amount = add_amount, grid = { x = x, y = y }, is_hotbar = false, hotbar_slot = '' }
+        inv.weight = inv.weight + add_amount * item_data.weight
+        remaining = remaining - add_amount
     end
     self.player:sync_data()
     return true
@@ -208,37 +256,17 @@ end)
 --- @param amount number: Amount to remove.
 function Inventory:remove_item(criteria, amount)
     if not amount or amount <= 0 then return false end
-    local items = self.player._data.inventory.items
-    if not items or next(items) == nil then return false end
-    local handlers = {
-        ['string'] = function(item, crit) return item.id == crit end,
-        ['number'] = function(item, crit, key) return tostring(key) == tostring(crit) end,
-        ['table'] = function(item, crit)
-            for k, v in pairs(crit) do
-                if not item.data or item.data[k] ~= v then
-                    return false
-                end
-            end
-            return true
-        end
-    }
-    local item_found = false
-    for key, item in pairs(items) do
-        local match = handlers[type(criteria)] and handlers[type(criteria)](item, criteria, key)
-        if match then
-            item_found = true
-            local item_data = keystone.data.items[item.id]
-            if not item_data then
-                break
-            end
-            local to_remove = math.min(item.amount, amount)
-            item.amount -= to_remove
-            self.player._data.inventory.weight -= to_remove * item_data.weight
-            if item.amount <= 0 then
-                items[tostring(key)] = nil
-            end
-            amount -= to_remove
-            if amount <= 0 then
+    local item = self:get_item(criteria)
+    if not item then return false end
+    local item_data = keystone.data.items[item.id]
+    if not item_data then return false end
+    local to_remove = math.min(item.amount, amount)
+    item.amount = item.amount - to_remove
+    self.player._data.inventory.weight = self.player._data.inventory.weight - (to_remove * item_data.weight)
+    if item.amount <= 0 then
+        for key, inv_item in pairs(self.player._data.inventory.items) do
+            if inv_item == item then
+                self.player._data.inventory.items[tostring(key)] = nil
                 break
             end
         end
@@ -251,48 +279,6 @@ exports('remove_item', function(source, criteria, amount)
     local player = player_registry[source]
     if player then return player.inventory:remove_item(criteria, amount) end
 end)
-
---- Moves an item in the players inventory.
---- @param source_x number: Source X grid position.
---- @param source_y number: Source Y grid position.
---- @param target_x number: Target X grid position.
---- @param target_y number: Target Y grid position.
-function Inventory:move_item(source_x, source_y, target_x, target_y)
-    local items = self.player._data.inventory.items
-    local item_to_move, target_slot
-    for key, item in pairs(items) do
-        if item.grid.x == source_x and item.grid.y == source_y then
-            item_to_move = key
-        end
-        if item.grid.x == target_x and item.grid.y == target_y then
-            target_slot = key
-        end
-        if item_to_move and target_slot then break end
-    end
-    if not item_to_move then return false end
-    if target_slot then
-        local item = items[item_to_move]
-        local target_item = items[target_slot]
-        if item.id == target_item.id and target_item.stackable then
-            local max_stack = target_item.stackable == true and math.huge or target_item.stackable
-            local total_qty = target_item.amount + item.amount
-            target_item.amount = math.min(total_qty, max_stack)
-            if total_qty > max_stack then
-                item.amount = total_qty - max_stack
-            else
-                items[item_to_move] = nil
-            end
-        else
-            items[item_to_move].grid.x, items[item_to_move].grid.y = target_x, target_y
-            items[target_slot].grid.x, items[target_slot].grid.y = source_x, source_y
-        end
-    else
-        items[item_to_move].grid.x = target_x
-        items[item_to_move].grid.y = target_y
-    end
-    self.player:sync_data()
-    return true
-end
 
 --- Updates and items data.
 --- @param critera  string|number|table: You can use the items id, key position, data search, or grid position.
