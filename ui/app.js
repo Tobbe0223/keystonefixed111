@@ -6,6 +6,7 @@ let PROGRESS_CIRCLE = null;
 let HUD = null;
 let SPEEDO = null;
 let DEATHSCREEN = null;
+let INTERACT_DUI = null;
 
 const handlers = {
     // UI Builder
@@ -129,7 +130,20 @@ const handlers = {
         if (DEATHSCREEN) {
             DEATHSCREEN.hide();
         }
-    }
+    },
+
+    // DUI
+    show_dui: (data) => {
+        if (INTERACT_DUI) {
+            INTERACT_DUI.close();
+        }
+        INTERACT_DUI = new DUI(data.options);
+    },
+    close_dui: () => {
+        if (INTERACT_DUI) {
+            INTERACT_DUI.close();
+        }
+    },
 
 };
 
