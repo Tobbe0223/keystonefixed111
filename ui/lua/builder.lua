@@ -28,7 +28,7 @@ end)
 
 --- @section NUI Callbacks
 
---- Removes NUI focus when closing any UI and closes the vehicle trunk if applicable.
+--- Removes NUI focus when closing any UI.
 --- @param data table: Data sent from the NUI.
 --- @param cb function: Callback function to respond to the NUI.
 RegisterNUICallback('close_ui', function(data, cb)
@@ -36,9 +36,17 @@ RegisterNUICallback('close_ui', function(data, cb)
     is_ui_open = false
     local vehicle_data = VEHICLES.get_vehicle_details(false)
     if vehicle_data and vehicle_data.plate and vehicle_data.distance and vehicle_data.distance <= 3.0 then
-        local door_index = vehicle_data.is_rear_engine and 4 or 5 -- reversed utils is being dumb
+        local door_index = vehicle_data.is_rear_engine and 4 or 5
         SetVehicleDoorShut(vehicle_data.vehicle, door_index, false)
     end
+
+    if data.dui_location_id then
+        if dui_locations[data.dui_location_id] then
+            dui_locations[data.dui_location_id].is_hidden = false
+        end
+        cleanup_character_creation()
+    end
+
     cb({ status = 'success' })
 end)
 
