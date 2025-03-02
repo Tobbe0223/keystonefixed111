@@ -85,8 +85,8 @@ AddEventHandler('keystone:sv:player_joined', function(source)
 end)
 
 --- Sends shared date to client on load.
-RegisterNetEvent('keystone:sv:send_shared_data')
-AddEventHandler('keystone:sv:send_shared_data', function()
+RegisterNetEvent('keystone:sv:request_shared_data')
+AddEventHandler('keystone:sv:request_shared_data', function()
     local src = source
     TriggerClientEvent('keystone:cl:receive_shared_data', src, keystone.data)
 end)
