@@ -7,7 +7,7 @@
 |_|\_\_____| |_| |____/ |_| \___/|_| \_|_____|
 ----------------------------------------------                                               
                 Framework Core
-                    V0.0.2              
+                    V0.0.3              
 ----------------------------------------------
 ]]
 
@@ -15,7 +15,7 @@ fx_version 'cerulean'
 games { 'gta5', 'rdr3' }
 
 name 'keystone'
-version '0.0.2'
+version '0.0.3'
 description 'Keystone - Framework Core'
 author 'keystone'
 repository 'https://github.com/keystonehub/keystone'
@@ -50,6 +50,9 @@ client_scripts {
     --- Modules
     'core/modules/**/client.lua',
 
+    --- Commands
+    'core/commands/client.lua',
+
     --- Scripts
     'scripts/**/client.lua',
 
@@ -67,6 +70,7 @@ server_scripts {
 
     --- Classes
     'core/classes/*.lua',
+
     --- Modules
     'core/modules/**/server.lua',
     
