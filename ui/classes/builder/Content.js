@@ -20,11 +20,9 @@ class Content {
         this.active_item_inventory = null;
         this.drag_image = null;
         this.hotbar_slots = 6;
-        this.$tooltip = null;
+        this.$tooltip = $('#tooltip');
         if (!$('#body_content').length) {
             this.create_body_content();
-            $('body').append('<div id="tooltip" class="tooltip"></div>');
-            this.$tooltip = $('#tooltip');
         }
     }
 
@@ -825,6 +823,7 @@ class Content {
     add_events(tab_data) {
         const self = this;
         $(document).off('.custom_event');
+        if (!self.$tooltip.length) $('body').append('<div id="tooltip" class="tooltip"></div>');
 
         self.active_item_ui = null;
 
