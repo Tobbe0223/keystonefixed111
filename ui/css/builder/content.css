@@ -59,6 +59,7 @@
 
 .inv_header {
     width: 97% !important;
+    text-transform: capitalize;
 }
 
 #body_content h3 span {
