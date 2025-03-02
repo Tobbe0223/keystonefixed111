@@ -22,12 +22,7 @@ end)
 RegisterNetEvent('keystone:cl:player_joined')
 AddEventHandler('keystone:cl:player_joined', function()
     debug_log('info', 'Player has joined client.')
-    init_shared_data()
-    initilize_hud()
-    init_statuses()
-    init_other_inventories()
-    game_world_disables()
-    COMMANDS.get_chat_suggestions()
+    init_player()
 end)
 
 --- Player joined event.
@@ -73,7 +68,18 @@ end)
 
 --- @section Initializaiton
 
---- Requests shared data from the server.
-function init_shared_data()
-    TriggerServerEvent('keystone:sv:send_shared_data', category)
+--- Inits player on player joined.
+function init_player()
+    --- Static data
+    TriggerServerEvent('keystone:sv:request_shared_data')
+    TriggerServerEvent('keystone:sv:request_other_inventories')
+    COMMANDS.get_chat_suggestions()
+
+    --- Clothing Stores
+    init_clothing_stores()
+
+    --- Threads
+    CreateThread(initilize_hud)
+    CreateThread(init_statuses)
+    CreateThread(game_world_disables)
 end
