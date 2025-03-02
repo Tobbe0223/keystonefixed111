@@ -128,7 +128,7 @@ class Functions {
                             message: 'Your character customisation has been saved successfully.',
                             duration: 3000
                         });
-                        $.post(`https://${this.resource_name}/close_ui`, JSON.stringify({}));
+                        $.post(`https://${this.resource_name}/close_ui`, JSON.stringify({ dui_location_id: data.dui_location_id }));
                     } else {
                         notify({
                             type: 'error',
@@ -153,10 +153,13 @@ class Functions {
     /**
      * Handles UI closure.
      */
-    close_ui() {
+    close_ui(data) {
         $('.bg_layer').hide();
         $('#ui_layer').empty().fadeOut(500);
         $('#tooltip').fadeOut(500).remove();
-        $.post(`https://keystone/close_ui`, JSON.stringify({}));
+        UI_HEADER = null;
+        UI_FOOTER = null;
+        UI_CONTENT = null;
+        $.post(`https://keystone/close_ui`, JSON.stringify({ dui_location_id: data.dui_location_id }));
     }
 }
