@@ -7,7 +7,7 @@
 |_|\_\_____| |_| |____/ |_| \___/|_| \_|_____|
 ----------------------------------------------                                               
                 Framework Core
-                    V0.0.1              
+                    V0.0.2              
 ----------------------------------------------
 ]]
 
@@ -15,7 +15,7 @@ fx_version 'cerulean'
 games { 'gta5', 'rdr3' }
 
 name 'keystone'
-version '0.0.1'
+version '0.0.2'
 description 'Keystone - Framework Core'
 author 'keystone'
 repository 'https://github.com/keystonehub/keystone'
