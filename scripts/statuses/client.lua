@@ -1,7 +1,7 @@
 --- @section Constants
 
 local STATUS_DECAY <const> = { hunger = 0.1, thirst = 0.08, hygiene = 0.025 }
-local INTERVAL = 20000 -- Status decay/sync interval in ms
+local INTERVAL = 10000 -- Status decay/sync interval in ms
 local HEALTH_DECAY_RATE <const> = 5 -- Health loss per interval when hunger/thirst is empty
 local BONE_INJURY_MAP <const> = { -- Bone mapping to human body svg.
     [31086] = 'head',
@@ -194,16 +194,20 @@ end)
 local function track_injuries()
     local injuries = {}
     while true do
-        local player = PlayerPedId()
-        local hit, bone_index = GetPedLastDamageBone(player)
-        if hit and BONE_INJURY_MAP[bone_index] then
-            local injury_area = BONE_INJURY_MAP[bone_index]
-            local severity = math.random(15, 40)
-            if last_injuries[injury_area] ~= severity then
-                last_injuries[injury_area] = severity
-                injuries[injury_area] = { add = severity }
-                TriggerServerEvent('keystone:sv:sync_injuries', injuries)
-                SendNUIMessage({ action = 'set_injury', area = injury_area, value = severity })
+        local player_ped = PlayerPedId()
+        if not DoesEntityExist(player_ped) or IsEntityDead(player_ped) then
+            Wait(2000)
+        else
+            local hit, bone_index = GetPedLastDamageBone(player_ped)
+            if hit and BONE_INJURY_MAP[bone_index] then
+                local injury_area = BONE_INJURY_MAP[bone_index]
+                local severity = math.random(15, 40)
+                if last_injuries[injury_area] ~= severity then
+                    last_injuries[injury_area] = severity
+                    injuries[injury_area] = { add = severity }
+                    TriggerServerEvent('keystone:sv:sync_injuries', injuries)
+                    SendNUIMessage({ action = 'set_injury', area = injury_area, value = severity })
+                end
             end
         end
         Wait(500)
@@ -242,70 +246,43 @@ local function handle_hygiene_effect(value)
     end
 end
 
---- Continuously degrades player statuses over time.
-local function degrade_statuses()
-    while true do
-        enforce_custom_health()
-        local data = get_player_data()
-        local statuses = data.statuses
-        local updates = {}
-        for status, decay_rate in pairs(STATUS_DECAY) do
-            if statuses[status] then
-                local new_value = math.max(0, statuses[status] - decay_rate)
-                if statuses[status] ~= new_value then
-                    updates[status] = { remove = statuses[status] - new_value }
-                    statuses[status] = new_value
-                end
-            end
-        end
-        if statuses.hunger == 0 or statuses.thirst == 0 then
-            if statuses.health > 10 then
-                statuses.health = math.max(10, statuses.health - HEALTH_DECAY_RATE)
-                updates.health = { remove = HEALTH_DECAY_RATE }
-            end
-        end
-        if next(updates) then
-            TriggerServerEvent('keystone:sv:sync_statuses', updates)
-        end
-        Wait(INTERVAL)
-    end
-end
-
---- Syncs player statuses.
-local function sync_statuses()
+--- Updates player statuses.
+local function update_statuses()
     while true do
         local data = get_player_data()
-        local statuses = data.statuses
-        local status_keys = {}
-        enforce_custom_health()
-        for k, v in pairs(statuses) do
-            local last_value = last_synced_statuses[k] or v
-            if v ~= last_value then
-                status_keys[#status_keys + 1] = k
-            end
-        end
-        if #status_keys > 0 then
-            CreateThread(function()
-                for i, key in ipairs(status_keys) do
-                    Wait(250 * i)
-                    local value = statuses[key]
-                    local last_value = last_synced_statuses[key] or value
-                    local update = {
-                        [key] = {
-                            add = value > last_value and value - last_value or 0,
-                            remove = value < last_value and last_value - value or 0
-                        }
-                    }
-                    TriggerServerEvent('keystone:sv:sync_statuses', update)
-                    last_synced_statuses[key] = value
-                    if key == 'hygiene' then
-                        handle_hygiene_effect(value)
+        if not data or not data.statuses then
+            Wait(2000)
+        else
+            enforce_custom_health()
+            local statuses = data.statuses
+            local updates = {}
+            local status_keys = {}
+            for status, decay_rate in pairs(STATUS_DECAY) do
+                if statuses[status] then
+                    local new_value = math.max(0, statuses[status] - decay_rate)
+                    if statuses[status] ~= new_value then
+                        updates[status] = { remove = statuses[status] - new_value }
+                        statuses[status] = new_value
+                        status_keys[#status_keys + 1] = status
                     end
                 end
-            end)
+            end
+            if statuses.hunger == 0 or statuses.thirst == 0 then
+                if statuses.health > 10 then
+                    statuses.health = math.max(10, statuses.health - HEALTH_DECAY_RATE)
+                    updates.health = { remove = HEALTH_DECAY_RATE }
+                    status_keys[#status_keys + 1] = 'health'
+                end
+            end
+            if next(updates) then
+                TriggerServerEvent('keystone:sv:sync_statuses', updates)
+            end
+            if statuses.hygiene then
+                handle_hygiene_effect(statuses.hygiene)
+            end
+            SendNUIMessage({ action = 'update_statuses', statuses = statuses })
+            check_flag_changes()
         end
-        SendNUIMessage({ action = 'update_statuses', statuses = statuses })
-        check_flag_changes()
         Wait(INTERVAL)
     end
 end
@@ -314,7 +291,8 @@ end
 
 --- Inits statuses; triggered by player_joined event
 function init_statuses()
-    CreateThread(degrade_statuses)
-    CreateThread(sync_statuses)
-    CreateThread(track_injuries)
+    SetTimeout(1500, function()
+        CreateThread(update_statuses)
+        CreateThread(track_injuries)
+    end)
 end
