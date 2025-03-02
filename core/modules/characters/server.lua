@@ -80,7 +80,7 @@ local function get_characters(source)
             },
             data = {
                 identity = character,
-                style = json.decode(character.style)
+                style = character.style and type(character.style) == 'string' and json.decode(character.style) or {}
             }
         }
     end
