@@ -79,19 +79,22 @@ function setup_character_select()
     DisplayRadar(false)
     CALLBACKS.trigger('keystone:sv:fetch_characters', nil, function(characters)
         if not characters or type(characters) ~= 'table' then debug_log('error', 'Error: Invalid character data format.') return end
-        local selected_character = characters[1] or nil
-        current_sex = selected_character and selected_character.data and selected_character.identity and selected_character.identity.sex or 'm'
+        if #characters == 0 then debug_log('error', 'Error: No characters found.') return end
+        local selected_character = characters[1] 
+        if not selected_character or not selected_character.data then debug_log('error', 'Error: Selected character is nil or missing data.') return end
+        current_sex = selected_character.data.identity and selected_character.data.identity.sex or 'm'
         preview_ped = current_sex == 'm' and 'mp_m_freemode_01' or 'mp_f_freemode_01'
         local model = GetHashKey(preview_ped)
         if not IsModelValid(model) then debug_log('error', 'Error: Invalid model.') return end
         REQUESTS.model(model)
         SetPlayerModel(PlayerId(), model)
         SetModelAsNoLongerNeeded(model)
-        local appearance = selected_character and selected_character.style or STYLES.get_style(current_sex)
-        if appearance then
-            CHARACTER_CREATION.set_ped_appearance(PlayerPedId(), appearance)
+        Wait(200)
+        local appearance = selected_character.data.style
+        if not appearance or type(appearance) ~= "table" then
+            debug_log('error', 'Error: Failed to retrieve valid appearance.')
         else
-            debug_log('error', 'Error: Failed to retrieve appearance.')
+            CHARACTER_CREATION.set_ped_appearance(PlayerPedId(), appearance)
         end
         local ped = PlayerPedId()
         SetEntityCoords(ped, MULTICHARACTER_PED_LOCATION.x, MULTICHARACTER_PED_LOCATION.y, MULTICHARACTER_PED_LOCATION.z, false, false, false, true)
@@ -118,7 +121,6 @@ function setup_character_select()
                         values = character.values or {},
                         actions = {
                             { id = 'play_character', key = 'P', label = 'Play' },
-                            { id = 'view_character', key = 'G', label = 'View' },
                             {
                                 id = 'delete_character',
                                 key = 'Z',
