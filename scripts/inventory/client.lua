@@ -1,8 +1,14 @@
+--- @section Tab Toggles
+
+--- Currently only here just to show player data works.
+
 local INCLUDE_STATUSES_IN_INVENTORY = true  
 local INCLUDE_FLAGS_IN_INVENTORY = true  
 local INCLUDE_INJURIES_IN_INVENTORY = true  
 local INCLUDE_ACCOUNTS_IN_INVENTORY = true  
 local INCLUDE_ROLES_IN_INVENTORY = true  
+
+--- @section Inventory UI
 
 local INVENTORY_UI = {
     resource = GetCurrentResourceName(),
@@ -25,7 +31,13 @@ local INVENTORY_UI = {
     },
 }
 
+--- @section Tables
+
 local other_inventories = {}
+
+--- @section Variables
+
+current_plate = nil
 
 --- @section Functions
 
@@ -106,37 +118,6 @@ local function map_inventory_items(inventory)
     end
     return formatted_items
 end
-
---- Maps inventory items for other inventories.
---- @param inventory table: The inventory data containing items.
---- @return table: A formatted table of items ready for UI display.
-local function map_other_items(inventory)
-    local items = type(inventory.items) == 'table' and inventory.items or {}
-    local formatted_items = {}
-    for item_key, item in pairs(items) do
-        local item_metadata = keystone.data.items[item.id]
-        if item_metadata then
-            formatted_items[#formatted_items + 1] = {
-                key = item_key,
-                id = item.id,
-                rarity = item_metadata.rarity and string.lower(item_metadata.rarity) or 'common',
-                weight = item_metadata.weight,
-                amount = item.amount or 0,
-                stackable = item_metadata.stackable,
-                x = item.grid and item.grid.x or 0,
-                y = item.grid and item.grid.y or 0,
-                width = item_metadata.grid and item_metadata.grid.width or 1,
-                height = item_metadata.grid and item_metadata.grid.height or 1,
-                image = {
-                    src = string.format('assets/images/items/%s', item_metadata.image or 'test_item.png'),
-                    size = { width = 'auto', height = 'auto', border = 'transparent' }
-                }
-            }
-        end
-    end
-    return formatted_items
-end
-
 
 --- Maps account data for inventory UI display.
 --- @param accounts table: The players accounts data.
@@ -293,6 +274,18 @@ end
 --- NUI Callback for moving items.
 RegisterNUICallback('inventory_move_item', function(data)
     if not data then return debug_log('error', 'Inventory move data missing.') end
+    local player_ped = PlayerPedId()
+    local vehicle_data
+    if IsPedInAnyVehicle(player_ped, false) then
+        vehicle_data = VEHICLES.get_vehicle_details(true)
+        data.other_type = 'glovebox'
+        data.plate = vehicle_data.plate
+    else
+        vehicle_data = VEHICLES.get_vehicle_details(false)
+        if not vehicle_data or vehicle_data.distance > 2.5 then return debug_log('error', 'No nearby vehicle found within range.') end
+        data.other_type = 'trunk'
+        data.plate = vehicle_data.plate
+    end
     TriggerServerEvent('keystone:sv:inventory_move_item', data)
 end)
 
@@ -381,13 +374,14 @@ function open_inventory(player_inventory, other_inventory, accounts, roles, stat
     }
 
     INVENTORY_UI.content.inventory.other = other_inventory and {
-        title = other_inventory.title or 'Other Inventory',
-        columns = other_inventory.grid_columns or 10,
-        rows = other_inventory.grid_rows or 10,
-        weight = other_inventory.weight or 0,
-        max_weight = other_inventory.max_weight or 0,
-        items = other_inventory.items or {}
-    } or nil
+        title = other_inventory.title,
+        inventory_type = other_inventory.inventory_type,
+        columns = other_inventory.grid_columns,
+        rows = other_inventory.grid_rows,
+        weight = other_inventory.weight,
+        max_weight = other_inventory.max_weight,
+        items = map_inventory_items(other_inventory)
+    } or nil   
 
     -- Include Accounts
     if INCLUDE_ACCOUNTS_IN_INVENTORY and next(accounts) then
@@ -467,64 +461,49 @@ end
 
 --- @section Other Inventories
 
+--- Receives updated other_inventories from server.
 RegisterNetEvent('keystone:cl:receive_all_inventories')
 AddEventHandler('keystone:cl:receive_all_inventories', function(inventories)
     if not inventories or type(inventories) ~= 'table' then return end
     other_inventories = inventories
-    debug_log('success', ('[Inventory] Received %d other inventories from the server.'):format(#inventories))
 end)
 
-
-local function get_other_inventory()
-    local player = PlayerPedId()
-    local other_id = nil
-    local inventory_type = nil
-    if IsPedInAnyVehicle(player, false) then
-        local vehicle_data = VEHICLES.get_vehicle_details(true)
-        if vehicle_data and vehicle_data.plate then
-            other_id = 'glovebox_' .. vehicle_data.plate
-            inventory_type = 'glovebox'
-        end
-    end
-    if not other_id then
-        local vehicle_data = VEHICLES.get_vehicle_details(false)
-        if vehicle_data and vehicle_data.plate and vehicle_data.distance and vehicle_data.distance <= 2.5 then
-            other_id = 'trunk_' .. vehicle_data.plate
-            inventory_type = 'trunk'
-            local door_index = vehicle_data.is_rear_engine and 4 or 5
-            SetVehicleDoorOpen(vehicle_data.vehicle, door_index, false, false)
-        end
-    end
-    if not other_id or not other_inventories[other_id] then return nil end
-    local inventory_data = other_inventories[other_id]
-    return {
-        title = string.format("%s Inventory", inventory_type:gsub("^%l", string.upper)),
-        columns = inventory_data.grid_columns or 6,
-        rows = inventory_data.grid_rows or 6,
-        weight = inventory_data.weight or 0,
-        max_weight = inventory_data.max_weight or 0,
-        items = map_other_items(inventory_data)
-    }
-end
-
+--- Gets other inventories from server on player joined.
 function init_other_inventories()
     TriggerServerEvent('keystone:sv:sync_other_inventories')
 end
 
 --- @section Keymapping
 
--- Register Command to Open Inventory
 RegisterCommand('open_inventory', function()
     local p_data = get_player_data()
     local player_inventory = p_data.inventory or {}
-    local other_inventory = get_other_inventory()
-    local accounts = INCLUDE_ACCOUNTS_IN_INVENTORY and (p_data.accounts or {}) or {}
-    local roles = INCLUDE_ROLES_IN_INVENTORY and (p_data.roles or {}) or {}
-    local statuses = INCLUDE_STATUSES_IN_INVENTORY and (p_data.statuses or {}) or {}
-    local flags = INCLUDE_FLAGS_IN_INVENTORY and (p_data.flags or {}) or {}
-    local injuries = INCLUDE_INJURIES_IN_INVENTORY and (p_data.injuries or {}) or {}
-    open_inventory(player_inventory, other_inventory, accounts, roles, statuses, flags, injuries)
-    TriggerEvent('keystone:cl:toggle_ui_state', true)
+    local player_ped = PlayerPedId()
+    local accounts  = INCLUDE_ACCOUNTS_IN_INVENTORY and (p_data.accounts or {}) or {}
+    local roles     = INCLUDE_ROLES_IN_INVENTORY and (p_data.roles or {}) or {}
+    local statuses  = INCLUDE_STATUSES_IN_INVENTORY and (p_data.statuses or {}) or {}
+    local flags     = INCLUDE_FLAGS_IN_INVENTORY and (p_data.flags or {}) or {}
+    local injuries  = INCLUDE_INJURIES_IN_INVENTORY and (p_data.injuries or {}) or {}
+    local vehicle_data = nil
+
+    if IsPedInAnyVehicle(player_ped, false) then
+        vehicle_data = VEHICLES.get_vehicle_details(true)
+        vehicle_data.inv_type = 'glovebox'
+    else
+        vehicle_data = VEHICLES.get_vehicle_details(false)
+        vehicle_data.inv_type = 'trunk'
+    end
+
+    if vehicle_data and vehicle_data.plate then
+        current_plate = vehicle_data.plate
+        CALLBACKS.trigger('keystone:sv:get_vehicle_inventory', { vehicle_data = vehicle_data }, function(success, veh_inventory)
+            open_inventory(player_inventory, veh_inventory, accounts, roles, statuses, flags, injuries)
+            TriggerEvent('keystone:cl:toggle_ui_state', true)
+        end)
+    else
+        open_inventory(player_inventory, nil, accounts, roles, statuses, flags, injuries)
+        TriggerEvent('keystone:cl:toggle_ui_state', true)
+    end
 end, false)
 
 RegisterKeyMapping('open_inventory', 'Open Inventory', 'keyboard', 'TAB')
