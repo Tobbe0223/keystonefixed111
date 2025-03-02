@@ -1,0 +1,210 @@
+/* Main UI container */
+.interact_ui {
+    height: fit-content;
+    min-width: fit-content;
+    max-width: 30vw;
+    color: var(--text_colour);
+    font-family: var(--text_font_family);
+    text-transform: uppercase;
+    font-size: 1.5vh;
+    
+}
+
+/* Header layout */
+.interact_header {
+    display: flex;
+    width: 100%;
+    font-size: 2.5vh;
+
+    font-weight: bold;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.interact_header::after {
+    position: absolute;
+    bottom: 0vh;
+    left: 0;
+    content: "";
+    width: 100%;
+    height: 0.3vh;
+    background: linear-gradient(to right, white, transparent);
+    border-radius: var(--border_radius);
+}
+
+/* Left container 30% */
+.left_header {
+    width: 20%;
+    display: flex;
+    justify-content: left;
+    padding: 0.5vh 0;
+}
+
+.left_header img {
+    height: height;
+    width: 64px;
+}
+
+/* Right container 70% (flex column) */
+.right_header {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 2vh;
+}
+
+.secondary_header {
+    width: 98%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.5vh;
+    margin-left: 0.1vh;
+}
+
+.primary_header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    color: var(--text_colour);   	
+}
+
+/* Interaction Keys Grid */
+.keys_container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 0.25vh;
+    align-items: flex-start;
+    position: relative;
+}
+
+.interaction_key {
+    margin-top: 1vh;
+    display: flex;
+    align-items: center;
+    color: var(--text_colour);
+    padding: 0.2vh;
+    font-weight: bold;
+}
+
+.key {
+    background: var(--secondary_background);
+    height: 2vh;
+    width: 2vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--border_radius);
+    color: var(--text_colour);
+    text-transform: uppercase;
+    margin-right: 1vh;
+    box-shadow: var(--box_shadow_inset);
+}
+
+.progress_grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr); 
+    gap: 1vh;
+    margin: 0.5vh 0;
+    position: relative;
+    padding-bottom: 1vh;
+}
+
+.progress_grid::after {
+    position: absolute;
+    bottom: 0.1vh;
+    left: 0;
+    content: "";
+    width: 100%;
+    height: 0.25vh;
+    background: linear-gradient(to right, white, transparent);
+    border-radius: var(--border_radius);
+    padding: 0.01vh;
+}
+
+.progress_grid.grid {
+    grid-template-columns: repeat(2, 1fr); 
+}
+
+.progress_item {
+    padding: 0.25vh;
+}
+
+.progress_item h3 {
+    margin-bottom: 0.5vh;
+    text-transform: uppercase;
+    font-size: inherit;
+}
+
+.interact_progress_header {
+    position: absolute;
+    display: flex;
+    width: 96%;
+    height: 100%;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 1.25vh;
+}
+
+.interact_progress_bar {
+    width: 98%;
+    height: 1.8vh;
+    background: var(--tertiary_background);
+    border-radius: var(--border_radius);
+    box-shadow: var(--box_shadow_inset);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.interact_progress_bar_fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--secondary_background), var(--background));
+    transition: width 0.3s ease;
+}
+
+.status_list {
+    list-style: none;
+    color: var(--text_colour);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    padding-top: 0;
+    padding-bottom: 1vh;
+}
+
+.status_list::after {
+    position: absolute;
+    bottom: 0.1vh;
+    left: 0;
+    content: "";
+    width: 100%;
+    height: 0.25vh;
+    background: linear-gradient(to right, white, transparent);
+    border-radius: var(--border_radius);
+    padding: 0.01vh;
+} 
+
+.status_list li {
+    display: flex;
+    align-items: center;
+    gap: 0.3vh;
+    padding: 0 0.25vh;
+    margin-top: 0.2vh;
+}
+
+.status_list li i {
+    background: var(--secondary_background);
+    height: 1.65vh;
+    width: 1.65vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--border_radius);
+    color: var(--text_colour);
+    text-transform: uppercase;
+    margin-right: 0.75vh;
+    box-shadow: var(--box_shadow_inset);
+}
