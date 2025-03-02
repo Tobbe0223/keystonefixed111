@@ -7,7 +7,7 @@
 |_|\_\_____| |_| |____/ |_| \___/|_| \_|_____|
 ----------------------------------------------                                               
                 Framework Core
-                    V0.0.0              
+                    V0.0.1              
 ----------------------------------------------
 ]]
 
@@ -15,7 +15,7 @@ fx_version 'cerulean'
 games { 'gta5', 'rdr3' }
 
 name 'keystone'
-version '0.0.0'
+version '0.0.1'
 description 'Keystone - Framework Core'
 author 'keystone'
 repository 'https://github.com/keystonehub/keystone'
@@ -63,7 +63,7 @@ server_scripts {
     '@oxmysql/lib/MySQL.lua',
     
     --- Utils
-    'utils/**/server.lua',
+    --'utils/**/server.lua',
 
     --- Classes
     'core/classes/*.lua',
@@ -85,6 +85,9 @@ server_scripts {
 shared_scripts {
     --- Utils
     'utils/**/shared.lua',
+
+    --- Scripts
+    'scripts/**/shared.lua',
 }
 
 dependencies {
