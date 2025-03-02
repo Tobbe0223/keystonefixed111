@@ -86,6 +86,33 @@ COMMANDS.register('revive', { 'mod', 'admin', 'dev', 'owner' }, 'Revive a player
     NOTIFICATIONS.send(source, { type = 'success', header = 'SYSTEM', message = ('You revived %s.'):format(source), duration = 5000 })
 end)
 
+--- Command to copy coords.
+COMMANDS.register('copycoords', { 'member', 'mod', 'admin', 'dev', 'owner' }, 'Copy current coordinates.', {
+    { name = 'type', help = 'Type to copy. Options: v2, v3, v4.' }
+}, function(source, args, raw)
+    local ped = GetPlayerPed(source)
+    local coords = GetEntityCoords(ped)
+    local heading = GetEntityHeading(ped)
+    local type = args[1] and string.lower(args[1]) or nil
+    local vector, object
+    if type == 'v2' then
+        vector = string.format("vector2(%.2f, %.2f)", coords.x, coords.y)
+        object = string.format("{ x = %.2f, y = %.2f }", coords.x, coords.y)
+    elseif type == 'v3' then
+        vector = string.format("vector3(%.2f, %.2f, %.2f)", coords.x, coords.y, coords.z)
+        object = string.format("{ x = %.2f, y = %.2f, z = %.2f }", coords.x, coords.y, coords.z)
+    elseif type == 'v4' then
+        vector = string.format("vector4(%.2f, %.2f, %.2f, %.2f)", coords.x, coords.y, coords.z, heading)
+        object = string.format("{ x = %.2f, y = %.2f, z = %.2f, w = %.2f }", coords.x, coords.y, coords.z, heading)
+    else
+        print('Invalid type. Use v2, v3, or v4.')
+        return
+    end
+    local message = string.format("Copied to Clipboard:\nVector: %s\nObject: %s", vector, object)
+    print(message)
+    TriggerClientEvent('keystone:cl:copy_to_clipboard', source, vector .. "\n" .. object)
+end)
+
 --- @section Events
 
 --- Event to spawn a vehicle at the players location and place them inside
