@@ -825,7 +825,6 @@ class Content {
     add_events(tab_data) {
         const self = this;
         $(document).off('.custom_event');
-        if (!self.$tooltip.length) $('body').append('<div id="tooltip" class="tooltip"></div>');
 
         self.active_item_ui = null;
 
