@@ -10,11 +10,6 @@ local IS_SERVER <const> = IsDuplicityVersion()
 
 local GetLocalTime = GetLocalTime
 
---- Classes to be loaded with priority before modules.
-local CLASSES <const> = { 
-    'Player'
-}
-
 --- Debug note levels and colour.
 local DEBUG_COLOURS = {
     reset = '^7', -- White (default)
