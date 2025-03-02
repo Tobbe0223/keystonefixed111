@@ -468,32 +468,30 @@ AddEventHandler('keystone:cl:receive_all_inventories', function(inventories)
     other_inventories = inventories
 end)
 
---- Gets other inventories from server on player joined.
-function init_other_inventories()
-    TriggerServerEvent('keystone:sv:sync_other_inventories')
-end
-
 --- @section Keymapping
 
+--- Handles opening inventory.
 RegisterCommand('open_inventory', function()
     local p_data = get_player_data()
     local player_inventory = p_data.inventory or {}
     local player_ped = PlayerPedId()
-    local accounts  = INCLUDE_ACCOUNTS_IN_INVENTORY and (p_data.accounts or {}) or {}
-    local roles     = INCLUDE_ROLES_IN_INVENTORY and (p_data.roles or {}) or {}
-    local statuses  = INCLUDE_STATUSES_IN_INVENTORY and (p_data.statuses or {}) or {}
-    local flags     = INCLUDE_FLAGS_IN_INVENTORY and (p_data.flags or {}) or {}
-    local injuries  = INCLUDE_INJURIES_IN_INVENTORY and (p_data.injuries or {}) or {}
+    local accounts = INCLUDE_ACCOUNTS_IN_INVENTORY and (p_data.accounts or {}) or {}
+    local roles = INCLUDE_ROLES_IN_INVENTORY and (p_data.roles or {}) or {}
+    local statuses = INCLUDE_STATUSES_IN_INVENTORY and (p_data.statuses or {}) or {}
+    local flags = INCLUDE_FLAGS_IN_INVENTORY and (p_data.flags or {}) or {}
+    local injuries = INCLUDE_INJURIES_IN_INVENTORY and (p_data.injuries or {}) or {}
     local vehicle_data = nil
-
     if IsPedInAnyVehicle(player_ped, false) then
         vehicle_data = VEHICLES.get_vehicle_details(true)
         vehicle_data.inv_type = 'glovebox'
     else
         vehicle_data = VEHICLES.get_vehicle_details(false)
-        vehicle_data.inv_type = 'trunk'
+        if vehicle_data and vehicle_data.distance and vehicle_data.distance <= 2.5 then
+            vehicle_data.inv_type = 'trunk'
+        else
+            vehicle_data = nil
+        end
     end
-
     if vehicle_data and vehicle_data.plate then
         current_plate = vehicle_data.plate
         CALLBACKS.trigger('keystone:sv:get_vehicle_inventory', { vehicle_data = vehicle_data }, function(success, veh_inventory)
