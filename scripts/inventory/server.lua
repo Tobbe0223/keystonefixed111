@@ -366,13 +366,7 @@ function add_item_to_other_inventory(inv_id, id, amount, data, target_x, target_
         end
         local new_key = tostring(next_key + 1)
         debug_log('info', 'Creating new entry for item ' .. id .. ' x' .. add_amount .. ' at cell (' .. target_x .. ',' .. target_y .. ').')
-        inv.items[new_key] = {
-            id = id,
-            amount = add_amount,
-            grid = { x = target_x, y = target_y },
-            is_hotbar = false,
-            hotbar_slot = ''
-        }
+        inv.items[new_key] = { id = id, amount = add_amount, grid = { x = target_x, y = target_y }, is_hotbar = false, hotbar_slot = '' }
         amount = amount - add_amount
     end
     TriggerClientEvent('keystone:cl:receive_all_inventories', -1, other_inventories)
@@ -381,7 +375,6 @@ function add_item_to_other_inventory(inv_id, id, amount, data, target_x, target_
 end
 
 --- Retrieves (or creates) the vehicle inventory based on vehicle data and inventory type.
---- The unique key is the vehicle's plate.
 --- @param vehicle_data table: The vehicle details (must include plate, model, class, and inv_type).
 --- @param inv_type string: The type of inventory ('glovebox' or 'trunk').
 --- @return table|nil: The inventory table or nil if missing required data.
@@ -423,8 +416,8 @@ CALLBACKS.register('keystone:sv:get_vehicle_inventory', function(source, data, c
 end)
 
 --- Syncs other inventories with client.
-RegisterNetEvent('keystone:sv:sync_other_inventories')
-AddEventHandler('keystone:sv:sync_other_inventories', function()
+RegisterServerEvent('keystone:sv:request_other_inventories')
+AddEventHandler('keystone:sv:request_other_inventories', function()
     local source = source
     TriggerClientEvent('keystone:cl:receive_all_inventories', source, other_inventories)
 end)
