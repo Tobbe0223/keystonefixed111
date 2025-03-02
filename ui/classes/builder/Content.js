@@ -15,15 +15,17 @@ class Content {
         this.data = data;
         this.modal = new Modal(invoking_resource);
         this.functions = new Functions(invoking_resource, this.modal);
-        if (!$('#body_content').length) {
-            this.create_body_content();
-            $('body').append('<div id="tooltip" class="tooltip"></div>');
-        }
         this.inventory_handlers = this.setup_inventory_handlers();
         this.active_item_ui = null;
         this.active_item_inventory = null;
         this.drag_image = null;
         this.hotbar_slots = 6;
+        this.$tooltip = null;
+        if (!$('#body_content').length) {
+            this.create_body_content();
+            $('body').append('<div id="tooltip" class="tooltip"></div>');
+            this.$tooltip = $('#tooltip');
+        }
     }
 
     /**
@@ -103,7 +105,10 @@ class Content {
      * @returns {string} - The combined HTML for the player and other inventory sections.
      */
     build_inventory({ player, other }) {
-        return [player && this.build_single_inventory({ title: 'Backpack', ...player, key: 'player', has_hotbar: true }), other && this.build_single_inventory({ title: other.title || 'Other', ...other, key: 'other' })].filter(Boolean).join('');
+        return [
+            player && this.build_single_inventory({  title: 'Backpack',  ...player,  key: 'player',  has_hotbar: true  }),
+            other && this.build_single_inventory({  title: other.title || 'Other',  ...other,  key: 'other' })
+        ].filter(Boolean).join('');
     }
 
     /**
@@ -119,7 +124,7 @@ class Content {
      * @param {number} params.max_weight - The maximum weight capacity of the inventory.
      * @returns {string} - The HTML for the inventory section.
      */
-    build_single_inventory({ title, columns, rows, items = [], key, weight, max_weight }) {
+    build_single_inventory({ title, columns, rows, items = {}, key, weight, max_weight }) {
         const weight_info = `${weight || 0}/${max_weight || 0}g`;
         const grid_style = `
             display: grid;
@@ -130,7 +135,7 @@ class Content {
             box-sizing: border-box;
         `;
         const grid = Array.from({ length: rows }, () => Array(columns).fill(null));
-        items.forEach(item => {
+        Object.values(items).forEach(item => {
             const { x, y, width = 1, height = 1 } = item;
             for (let i = 0; i < height; i++) {
                 for (let j = 0; j < width; j++) {
@@ -140,42 +145,40 @@ class Content {
                 }
             }
         });
-        const grid_cells = grid.flat().map((item, index) => {
+        const grid_cells = grid.flat().map(item => {
             if (item) {
                 const rarity = item?.rarity ? `var(--rarity_${item.rarity.toLowerCase()})` : 'transparent';
-                const position_style = `grid-column: ${item.x + 1} / span ${item.width}; grid-row: ${item.y + 1} / span ${item.height};`;
-
+                const position_style = `grid-column: ${item.x + 1} / span ${item.width || 1}; grid-row: ${item.y + 1} / span ${item.height || 1};`;
                 return `
                     <div class="inventory_grid_item ${item.is_hotbar ? 'hotbar_item' : ''}"
                         style="${position_style} background: linear-gradient(0deg, ${rarity} 0%, var(--secondary_background) 40%, var(--background) 80%); border: 1px solid ${rarity};"
-                        data-inventory="${key}" 
+                        data-inventory="${key}"
                         data-x="${item.x}" 
                         data-y="${item.y}"
                         draggable="true">
                         <img src="${item.image.src}" alt="${item.id}" style="width: ${item.image.size.width}; height: ${item.image.size.height}; border: ${item.image.size.border};" />
-                        
                         ${item.amount > 1 ? `<span class="item_quantity">${item.amount}x</span>` : ''}
-                        
                         ${item.is_hotbar ? `<span class="hotbar_slot">${item.hotbar_slot}</span>` : ''}
-
                         ${item.quality ?? item.durability ? `
                             <div class="rarity_progress_bar">
                                 <div style="width: ${item.quality ?? item.durability}%; height: 100%; background: ${rarity};"></div>
                             </div>
                         ` : ''}
-                    </div>`;
+                    </div>
+                `;
             }
             return `<div class="inventory_grid_cell"></div>`;
         });
+        const formatted_title = title.replace(/_/g, ' ');
         return `        
             <div class="inventory_grid ${key}_inventory">
-                <h3 class="inv_header">${title} <span>${weight_info}</span></h3>
+                <h3 class="inv_header">${formatted_title} <span>${weight_info}</span></h3>
                 <div class="inventory_grid_container" style="${grid_style}">
                     ${grid_cells.join('')}
                 </div>
             </div>`;
-    }
-
+    }    
+    
     /**
      * Handles drag-and-drop functionality for inventory items within a grid system.
      *
@@ -202,58 +205,79 @@ class Content {
             floating_item = create_floating_item(item_data, e.pageX, e.pageY);
             $item.addClass('dragging');
             self.active_item_inventory = item_data;
-            $('#tooltip').hide();
+            self.$tooltip.hide();
             e.preventDefault();
         };
 
         const update_drag = (e) => {
             if (!is_dragging || !floating_item) return;
             floating_item.css({ left: `${e.pageX - 32}px`, top: `${e.pageY - 32}px` });
-            $('#tooltip:visible').css({ left: `${e.pageX + 15}px`, top: `${e.pageY + 15}px` });
-        };
+            if (self.$tooltip.is(':visible')) {
+                self.$tooltip.css({ left: `${e.pageX + 15}px`, top: `${e.pageY + 15}px` });
+            }
+        };        
 
         const stop_drag = (e) => {
             if (!is_dragging || !original_item || !floating_item) return;
-            const inventory = ['player', 'other'].find(inv => is_mouse_inside_grid(e, $(`.inventory_grid.${inv}_inventory`)));
-            if (!inventory) return console.warn('[Stop Drag] Dropped outside inventory, reverting.'), revert_drag();
-            const grid_offset = $(`.inventory_grid.${inventory}_inventory`).offset();
+            floating_item.remove();
+            is_dragging = false;
+            $('.inventory_grid_item').removeClass('dragging');
+            const $player_grid = $(`.inventory_grid.player_inventory`);
+            const $other_grid = $(`.inventory_grid.other_inventory`);
+            let target_inventory = null;
+            let target_grid = null;
+            if (is_mouse_inside_grid(e, $player_grid)) {
+                target_inventory = 'player';
+                target_grid = $player_grid;
+            } else if (is_mouse_inside_grid(e, $other_grid)) {
+                target_inventory = 'other';
+                target_grid = $other_grid;
+            }
+            if (!target_inventory) {
+                revert_drag();
+                return;
+            }
+            grid_size = { columns: target_grid.data('columns'), rows: target_grid.data('rows') };
+            const grid_offset = target_grid.offset();
             const target_x = Math.floor((e.pageX - grid_offset.left) / 64);
             const target_y = Math.floor((e.pageY - grid_offset.top) / 64);
-            if (check_valid_position(original_item.item_data, target_x, target_y, tab_data[inventory]?.items || [], grid_size)) {
-                self.move_item(tab_data, original_item.inventory_key, original_item.x, original_item.y, inventory, target_x, target_y);
+            if (check_valid_position(original_item.item_data, target_x, target_y, tab_data[target_inventory]?.items || [], grid_size)) {
+                self.move_item(tab_data, original_item.inventory_key, original_item.x, original_item.y, target_inventory, target_x, target_y);
             } else {
-                console.warn('[Stop Drag] Move Invalid, Reverting Position');
                 self.move_item(tab_data, original_item.inventory_key, original_item.x, original_item.y, original_item.inventory_key, original_item.x, original_item.y);
             }
-            self.active_item_inventory = null;
-            revert_drag();
+            self.$tooltip.hide();
         };
-
+        
         const is_mouse_inside_grid = (e, $grid) => {
-            if (!$grid.length) return false;
             const offset = $grid.offset();
-            return (e.pageX >= offset.left && e.pageX <= offset.left + $grid.width() &&
-                    e.pageY >= offset.top && e.pageY <= offset.top + $grid.height());
+            return e.pageX >= offset.left && e.pageX < offset.left + $grid.width() &&
+                   e.pageY >= offset.top && e.pageY < offset.top + $grid.height();
         };
-
+        
         const revert_drag = () => {
             floating_item?.remove();
             floating_item = null;
             original_item = null;
             is_dragging = false;
             $('.inventory_grid_item').removeClass('dragging');
-            $('#tooltip').hide();
+            self.$tooltip.hide();
         };
-
+        
         const check_valid_position = (item, target_x, target_y, grid_items, grid_size) => {
-            if (target_x < 0 || target_y < 0 || target_x + item.width > grid_size.columns || target_y + item.height > grid_size.rows) return false;
-            return !grid_items.some(other_item => {
-                if (other_item === item) return false;
-                return (target_x < other_item.x + other_item.width && target_x + item.width > other_item.x &&
-                        target_y < other_item.y + other_item.height && target_y + item.height > other_item.y);
-            });
+            if (target_x < 0 || target_y < 0 || target_x + item.width > grid_size.columns || target_y + item.height > grid_size.rows) {
+                return false;
+            }
+            for (const other_item of grid_items) {
+                if (other_item === item) continue;
+                if (target_x < other_item.x + other_item.width && target_x + item.width > other_item.x &&
+                    target_y < other_item.y + other_item.height && target_y + item.height > other_item.y) {
+                    return false;
+                }
+            }
+            return true;
         };
-
+        
         const create_floating_item = (item, mouse_x, mouse_y) => {
             return $('<div class="floating-item"></div>').css({
                 position: 'absolute',
@@ -277,17 +301,16 @@ class Content {
             $item.toggleClass('hovered', !!item_data);
             if (item_data) {
                 self.active_item_inventory = item_data;
-                $('#tooltip').html(self.update_tooltip(item_data, is_other_inventory)).show();
+                self.$tooltip.html(self.update_tooltip(item_data, is_other_inventory)).show();
                 $(document).on('mousemove.tooltip', (e) => {
-                    const tooltip = $('#tooltip');
                     let tooltip_x = e.pageX + 15, tooltip_y = e.pageY + 15;
-                    if (tooltip_x + tooltip.outerWidth() > $(window).width()) tooltip_x = e.pageX - 15 - tooltip.outerWidth();
-                    if (tooltip_y + tooltip.outerHeight() > $(window).height()) tooltip_y = e.pageY - 15 - tooltip.outerHeight();
-                    tooltip.css({ left: `${tooltip_x}px`, top: `${tooltip_y}px` });
+                    if (tooltip_x + self.$tooltip.outerWidth() > $(window).width()) tooltip_x = e.pageX - 15 - self.$tooltip.outerWidth();
+                    if (tooltip_y + self.$tooltip.outerHeight() > $(window).height()) tooltip_y = e.pageY - 15 - self.$tooltip.outerHeight();
+                    self.$tooltip.css({ left: `${tooltip_x}px`, top: `${tooltip_y}px` });
                 });
             } else {
                 self.active_item_inventory = null;
-                $('#tooltip').hide();
+                self.$tooltip.hide();
                 $(document).off('mousemove.tooltip');
             }
         };
@@ -297,20 +320,17 @@ class Content {
             .on('mousemove', update_drag)
             .on('mouseup', stop_drag)
             .on('mouseenter', '.inventory_grid_item', (e) => hover_item($(e.currentTarget)))
-            .on('mouseleave', '.inventory_grid_item', () => $('#tooltip').hide());
+            .on('mouseleave', '.inventory_grid_item', () => self.$tooltip.hide());
     }
 
     /**
      * Moves an item between inventory grid positions or between different inventories.
-     * 
-     * This function updates item positions within an inventory system that uses a grid-based layout.
-     * It ensures items are correctly moved, stacked (if applicable), or swapped between inventories.
      *
      * @param {Object} tab_data - The inventory data containing all items for different inventories.
-     * @param {string} source_inventory - The key of the source inventory (e.g., "player", "other").
+     * @param {string} source_inventory - The key of the source inventory (e.g., "player" or a unique inventory key).
      * @param {number} source_x - The X coordinate of the item in the source inventory.
      * @param {number} source_y - The Y coordinate of the item in the source inventory.
-     * @param {string} target_inventory - The key of the target inventory.
+     * @param {string} target_inventory - The key of the target inventory (e.g., "player", "trunk_plate", etc.).
      * @param {number} target_x - The X coordinate of the new item position.
      * @param {number} target_y - The Y coordinate of the new item position.
      */
@@ -318,43 +338,44 @@ class Content {
         const self = this;
         const src_items = tab_data[source_inventory]?.items || [];
         const tgt_items = tab_data[target_inventory]?.items || [];
-        const src_idx = src_items.findIndex(itm => itm.x === source_x && itm.y === source_y);
-        if (src_idx === -1) return console.warn(`[Move Item] No item found at (${source_x}, ${source_y}) in "${source_inventory}".`);
-        function update_inventory() {
+        const src_idx = src_items.findIndex(item => item.x === source_x && item.y === source_y);
+        if (src_idx === -1) {
+            console.warn(`[Move Item] No item found at (${source_x}, ${source_y}) in "${source_inventory}".`);
+            return;
+        }
+        const update_inventory = () => {
             tab_data[source_inventory].items = src_items;
             tab_data[target_inventory].items = tgt_items;
-            $(`.inventory_grid_item[data-x="${source_x}"][data-y="${source_y}"][data-inventory="${source_inventory}"]`).attr("data-x", target_x).attr("data-y", target_y);
+            $(`.inventory_grid_item[data-x='${source_x}'][data-y='${source_y}'][data-inventory='${source_inventory}']`).attr('data-x', target_x).attr('data-y', target_y);
             tab_data[source_inventory].weight = self.calculate_inventory_weight(src_items);
             tab_data[target_inventory].weight = self.calculate_inventory_weight(tgt_items);
             self.update_body_content(tab_data);
-        }
+        };
         const item_to_move = src_items.splice(src_idx, 1)[0];
-        const tgt_idx = tgt_items.findIndex(itm => itm.x === target_x && itm.y === target_y);
+        const tgt_idx = tgt_items.findIndex(item => item.x === target_x && item.y === target_y);
         if (tgt_idx === -1) {
-            item_to_move.x = target_x;
-            item_to_move.y = target_y;
+            Object.assign(item_to_move, { x: target_x, y: target_y });
             tgt_items.push(item_to_move);
-            update_inventory();
-            return;
-        }
-        const target_item = tgt_items[tgt_idx];
-        if (item_to_move.id === target_item.id && target_item.stackable !== false) {
-            const max_stack = target_item.stackable === true ? Infinity : target_item.stackable;
-            const total_qty = target_item.amount + item_to_move.amount;
-            target_item.amount = Math.min(total_qty, max_stack);
-            if (total_qty > max_stack) {
-                item_to_move.amount = total_qty - max_stack;
-                tgt_items.push(item_to_move);
+        } else {
+            const target_item = tgt_items[tgt_idx];
+            if (item_to_move.id === target_item.id && target_item.stackable !== false) {
+                const max_stack = target_item.stackable === true ? Infinity : target_item.stackable;
+                const total_qty = target_item.amount + item_to_move.amount;
+                target_item.amount = Math.min(total_qty, max_stack);
+                if (total_qty > max_stack) {
+                    item_to_move.amount = total_qty - max_stack;
+                    tgt_items.push(item_to_move);
+                }
+            } else {
+                [item_to_move.x, item_to_move.y, target_item.x, target_item.y] = [target_x, target_y, source_x, source_y];
+                src_items.push(target_item);
+                tgt_items[tgt_idx] = item_to_move;
             }
-            update_inventory();
-            return;
         }
-        [item_to_move.x, item_to_move.y, target_item.x, target_item.y] = [target_x, target_y, source_x, source_y];
-        src_items.push(target_item);
-        tgt_items[tgt_idx] = item_to_move;
         update_inventory();
         $.post(`https://${GetParentResourceName()}/inventory_move_item`, JSON.stringify({ source_inventory, source_x, source_y, target_inventory, target_x, target_y }));
     }
+    
     
     /**
      * Calculates the total weight of items in an inventory.
@@ -393,7 +414,7 @@ class Content {
                         const index = items.findIndex(itm => itm.x === x && itm.y === y);
                         if (index !== -1) {
                             items.splice(index, 1);
-                            const $cell = $(`.inventory_grid_item[data-inventory="${source_inventory}"][data-x="${x}"][data-y="${y}"]`);
+                            const $cell = $(`.inventory_grid_item[data-inventory='${source_inventory}'][data-x='${x}'][data-y='${y}']`);
                             $cell.empty().removeAttr('draggable').css('background', '');
                         } else {
                             console.warn(`[Handler] No item found at (${x}, ${y}) for inventory ${source_inventory}.`);
@@ -804,12 +825,12 @@ class Content {
     add_events(tab_data) {
         const self = this;
         $(document).off('.custom_event');
-        if (!$('#tooltip').length) $('body').append('<div id="tooltip" class="tooltip"></div>');
+        if (!self.$tooltip.length) $('body').append('<div id="tooltip" class="tooltip"></div>');
 
         self.active_item_ui = null;
 
         const reset_active_items = () => {
-            $('#tooltip').hide();
+            self.$tooltip.hide();
             self.active_item_ui = null;
         };
 
@@ -817,7 +838,7 @@ class Content {
             const on_hover_data = $(this).data('on-hover');
             if (on_hover_data) {
                 self.active_item_ui = on_hover_data;
-                $('#tooltip').html(self.update_tooltip({ on_hover: on_hover_data }, false)).show();
+                self.$tooltip.html(self.update_tooltip({ on_hover: on_hover_data }, false)).show();
             }
         }).on('mouseleave.custom_event', '.body_card', reset_active_items);
 
@@ -826,7 +847,7 @@ class Content {
         });
 
         $(document).off('keydown.custom_event').on('keydown.custom_event', e => {
-            if (!$('#tooltip').is(':visible')) return;
+            if (!self.$tooltip.is(':visible')) return;
             const active_item = self.active_item_inventory || self.active_item_ui;
             if (!active_item) return;
             const action = (active_item.actions || active_item.on_hover?.actions)?.find(a => a.key.toLowerCase() === e.key.toLowerCase());
