@@ -4,10 +4,10 @@ version: 1.0
 repository: https://github.com/Tobbe0223/keystonefixed111
 
 tasks:
-  - action: download_github
+  - task: download_github
     url: https://github.com/Tobbe0223/keystonefixed111/archive/refs/heads/main.zip
-    path: resources/KeystoneFramework
+    dest: resources/KeystoneFramework
     unzip: true
 
-  - action: query_database
+  - task: query_database
     file: resources/KeystoneFramework/resources/[txAdmin]/setup.sql
