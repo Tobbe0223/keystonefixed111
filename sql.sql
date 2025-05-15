@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `players` (
     `sex` VARCHAR(1) NOT NULL DEFAULT 'm',
     `date_of_birth` VARCHAR(10) NOT NULL DEFAULT '0000-00-00',
     `nationality` VARCHAR(255) NOT NULL DEFAULT 'United Kingdom',
-    `profile_picture` TEXT NOT NULL DEFAULT 'assets/images/avatar_placeholder.jpg',
+    `profile_picture` TEXT NOT NULL,
     `last_login` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
     `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     PRIMARY KEY (`unique_id`, `char_id`),
