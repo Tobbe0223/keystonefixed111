@@ -1,13 +1,96 @@
-name: Keystone Framework (Fixed)
-description: Keystone Framework server setup with fixed setup.sql
-version: 1.0
-repository: https://github.com/Tobbe0223/keystonefixed111
+$engine: 3
+$minFxVersion: 7290
+$onesync: on
+name: Keystone Framework
+author: Case
+description: Keystone Framework Beta Build.
 
 tasks:
-  - task: download_github
-    url: https://github.com/Tobbe0223/keystonefixed111/archive/refs/heads/main.zip
-    dest: resources/KeystoneFramework
-    unzip: true
 
-  - task: query_database
-    file: resources/KeystoneFramework/resources/[txAdmin]/setup.sql
+  # Connect Database
+  - action: connect_database 
+
+  # Download txAdminRecipe
+  - action: download_github
+    src: https://raw.githubusercontent.com/Tobbe0223/keystonefixed111/main/recipe.yaml
+    ref: main
+    dest: ./resources/[txAdmin]
+
+  # Download default CFX resources
+  - action: download_github
+    src: https://github.com/citizenfx/cfx-server-data
+    ref: master
+    subpath: resources
+    dest: ./resources/[cfx-default]
+
+  # Download Keystone
+  - action: download_github
+    src: https://github.com/keystonehub/keystone
+    ref: main
+    dest: ./resources/[core]/keystone
+
+  # Download OxMySQL
+  - action: download_file
+    url: https://github.com/overextended/oxmysql/releases/latest/download/oxmysql.zip
+    path: ./tmp/oxmysql.zip
+  - action: unzip
+    src: ./tmp/oxmysql.zip
+    dest: ./resources/[ox]
+
+  # Download bob74_ipl
+  - action: download_github
+    src: https://github.com/Bob74/bob74_ipl
+    ref: master
+    dest: ./resources/[standalone]/bob74_ipl
+
+  # Download pma-voice
+  - action: download_github
+    src: https://github.com/AvarianKnight/pma-voice
+    ref: main
+    dest: ./resources/[standalone]/pma-voice
+
+  # Download fivem_utils
+  - action: download_github
+    src: https://github.com/keystonehub/fivem_utils
+    ref: main
+    dest: ./resources/[core]/fivem_utils
+
+  # Waste time
+  - action: waste_time
+    seconds: 3 
+
+  # Replace String for SQL Configuration
+  - action: replace_string
+    mode: all_vars
+    file: 
+      - ./resources/[txAdmin]/setup.sql
+
+  # Execute SQL Setup for txAdmin
+  - action: query_database
+    file: ./resources/[txAdmin]/setup.sql
+
+  # Move server.cfg to root
+  - action: move_path
+    src: ./resources/[txAdmin]/server.cfg
+    dest: ./server.cfg
+
+  # Move logo to root
+  - action: move_path
+    src: ./resources/[txAdmin]/server_logo.png
+    dest: ./server_logo.png
+
+  # Remove unwanted files
+  - action: remove_path
+    path: ./resources/[txAdmin]/readme.md
+  - action: remove_path
+    path: ./resources/[txAdmin]/recipe.yaml
+  - action: remove_path
+    path: ./resources/[txAdmin]/setup.sql
+
+  # Remove the [txAdmin] directory and its contents
+  - action: remove_path
+    path: ./resources/[txAdmin]
+
+  # Clean up temporary files
+  - action: remove_path
+    path: ./tmp
