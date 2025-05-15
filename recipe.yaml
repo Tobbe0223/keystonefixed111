@@ -3,10 +3,11 @@ description: Keystone Framework server setup with fixed setup.sql
 version: 1.0
 repository: https://github.com/Tobbe0223/keystonefixed111
 
-resources:
-  - url: https://github.com/Tobbe0223/keystonefixed111/archive/refs/heads/main.zip
+tasks:
+  - action: download_github
+    url: https://github.com/Tobbe0223/keystonefixed111/archive/refs/heads/main.zip
     path: resources/KeystoneFramework
     unzip: true
 
-database:
-  setup: resources/KeystoneFramework/resources/[txAdmin]/setup.sql
+  - action: query_database
+    file: resources/KeystoneFramework/resources/[txAdmin]/setup.sql
